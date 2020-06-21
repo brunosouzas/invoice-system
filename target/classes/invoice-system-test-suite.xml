@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="invoice-system-test-suite.xml" />
+	<munit:test name="invoice-system-test-suite-get:\invoices\(invoiceId):invoice-system-config_json_Test" doc:id="2c9a7af0-f77a-42e8-b7b1-94feea988893" description="Test">
+		<munit:behavior >
+			<munit:set-event doc:name="Set Input" doc:id="11e265cb-305f-4a8e-bbac-643ac14bcc72" >
+				<munit:attributes value="#[readUrl('classpath://invoiceByinvoiceId/set-event_attributes.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to get:\invoices\(invoiceId):invoice-system-config" doc:id="7f88b52b-fb29-42f9-9278-4318023d4152" name="get:\invoices\(invoiceId):invoice-system-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:verify-call doc:name="Verify call" doc:id="6f69932a-c001-45c4-92d1-b44e8b4141a0" processor="flow-ref" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="cc146b9e-205b-45b4-b693-a75cbcd243e0" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+
+	<munit:test name="invoice-system-test-suite-get:\invoices\(invoiceId):invoice-system-config_pdf_Test" doc:id="bf3f90df-da39-4885-bce6-6fa59a70d5d6" description="Test">
+		<munit:behavior >
+			<munit:set-event doc:name="Set Input" doc:id="99f3a1d3-2dae-490d-b1b3-d02d6027ed09" >
+				<munit:attributes value="#[readUrl('classpath://invoiceByinvoiceId/set-event_attributes_pdf.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to get:\invoices\(invoiceId):invoice-system-config" doc:id="dc4c588d-b3c5-4782-bdd4-181fddf2b86b" name="get:\invoices\(invoiceId):invoice-system-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:verify-call doc:name="Verify call" doc:id="b105c45b-be13-4198-bc58-789fd8ba3a8b" processor="flow-ref" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="f4832507-cdc5-45f4-862a-2a3ff28a1a65" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+
+</mule>

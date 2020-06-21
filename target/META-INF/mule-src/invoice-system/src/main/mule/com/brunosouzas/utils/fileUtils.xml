@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+	<flow name="readCSV::subFlow" doc:id="44a73874-c781-4704-973f-ff3fba960a36" >
+		<file:read doc:name="Read CSV file" doc:id="25915908-be7a-46a1-bd2d-e86819e5de16" config-ref="File_Config" path="#[p('app.home') ++ p('file.invoiceCsvPath')]" />
+		<ee:transform doc:name="convert to Json" doc:id="19569ade-5a1a-4a39-9833-201c005ea2c4">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="c53f079d-7348-49ae-929e-c13144d22b57" type="ANY">
+				<json-logger:logger doc:name="Logger" doc:id="1dcda946-b384-4c92-bbfd-63672beb3596" config-ref="JSON_Logger_Config" message="Error Log" tracePoint="EXCEPTION" priority="ERROR" category="ERROR_LOG">
+					<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: JSONLoggerModule::stringifyNonJSON(payload),
+    errorDetail: error.detailedDescription
+}]]]></json-logger:content>
+				</json-logger:logger>
+				<raise-error doc:name="CUSTOM:INTERNAL_SERVER_ERROR" doc:id="181c22d1-2c43-434c-b3f3-784648869037" type="CUSTOM:INTERNAL_SERVER_ERROR"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>

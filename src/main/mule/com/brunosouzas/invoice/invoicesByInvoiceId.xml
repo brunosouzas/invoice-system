@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:s3="http://www.mulesoft.org/schema/mule/s3"
+	xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd">
+	
+	<flow name="invoicesByInvoiceId::Flow" doc:id="4a3c0145-1bd1-4a28-bc1e-995a3c86962a" >
+		<flow-ref doc:name="readCSV" doc:id="1316d58f-c2b9-4c9f-95e5-8bfd6abeefa5" name="readCSV::subFlow"/>
+		<choice doc:name="Choice" doc:id="111c3c2c-bdd8-4008-ab36-3f4aaf08bbf3" >
+			<when expression="#[isEmpty(payload[?($.invoiceId as Number == vars.invoiceId as Number default 0)])]">
+				<json-logger:logger doc:name="Logger" doc:id="ecdc4fee-003b-400b-bc88-d69af362ac5f" config-ref="JSON_Logger_Config" message="Sales to Order Error" tracePoint="EXCEPTION" priority="ERROR" category="API_ERROR_LOG">
+					<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: JSONLoggerModule::stringifyNonJSON(payload),
+    errordescription: "Invoices from Id " ++ vars.invoiceId as String default "" ++ " Not Found"
+}]]]></json-logger:content>
+				</json-logger:logger>
+				<raise-error doc:name="CUSTOM:ID_NOT_FOUND" doc:id="e55d3b68-bcc1-413b-8a5b-b4dbd13c1444" type="CUSTOM:ID_NOT_FOUND" description='#["Invoices from Id " ++ vars.invoiceId as String default "" ++ " Not Found"]'/>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="payload" doc:id="065619e2-b3df-45c2-900e-958585694909">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+import modules::NumberUtils
+import modules::DateUtils
+var pload = payload[?($.invoiceId as Number == vars.invoiceId as Number)][0]
+output application/json
+---
+{
+	invoice: {
+		invoiceId: pload.invoiceId as Number default "",
+		customerId: pload.customerId as Number default "",
+		contractId: pload.contractId as Number default "",
+		invoiceNumber: pload.invoiceNumber default "",
+		invoiceAmout: NumberUtils::CurrencyFormat(pload.invoiceAmout as Number, pload.currencyCode) default "",
+		currencyCode: pload.currencyCode default "",
+		invoiceDueDate: DateUtils::formatDate(pload.invoiceDueDate, pload.currencyCode) default ""
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="invoicesByInvoiceId_pdf::Flow" doc:id="02dbef6b-6bda-4215-b713-f671c59735bc" >
+		<s3:get-object doc:name="Get object" doc:id="a5d041ce-e50c-4c82-a086-d72fe5a9e162" config-ref="Amazon_S3_Configuration" bucketName="brunosouzas-invoices" key="invoice.pdf"/>
+		<ee:transform doc:name="payload" doc:id="42ec8797-4ac3-4068-b8a2-b6553e12be99" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Binaries
+output text/plain
+---
+toBase64(write(payload, "text/plain")) as String]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="53ec5870-a6c3-4cc2-ba74-2e8ba77fb0ea" type="ANY">
+				<json-logger:logger doc:name="Logger" doc:id="3096828b-a66d-4487-a80c-c7848139ef1d" config-ref="JSON_Logger_Config" message="Sales to Order Error" tracePoint="EXCEPTION" priority="ERROR" category="API_ERROR_LOG">
+					<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: JSONLoggerModule::stringifyNonJSON(payload),
+    errordescription: error.detailedDescription
+}]]]></json-logger:content>
+				</json-logger:logger>
+				<raise-error doc:name="CUSTOM:INTERNAL_SERVER_ERROR" doc:id="e1578c7e-1c62-4a39-8a62-07582d740aa2" type="CUSTOM:INTERNAL_SERVER_ERROR"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	
+</mule>

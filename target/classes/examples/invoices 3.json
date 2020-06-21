@@ -1,0 +1,23 @@
+{
+  "invoices": [
+    {
+      "invoiceId": 2,
+      "customerId": 10400043,
+      "contractId": 40008557,
+      "invoiceNumber": "43190692660604001316550500001139691767689488",
+      "invoiceAmout": 149.99,
+      "currencyCode": "EUR",
+      "invoiceDueDate": "2020-07-01"
+    },
+    {
+      "invoiceId": 3,
+      "customerId": 10071796,
+      "contractId": 181805,
+      "invoiceNumber": "43190699860604001316550500001239691767689400",
+      "invoiceAmout": 349.99,
+      "currencyCode": "GBP",
+      "invoiceDueDate": "2020-07-01"
+    }
+  ],
+  "totalRecords": 1
+}

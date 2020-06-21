@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+	
+	<flow name="invoicesByContarctID::Flow" doc:id="565b69df-4061-44f8-ab79-ce6c85d7c36b" >
+		<flow-ref doc:name="readCSV" doc:id="5d2900ec-a412-41f0-a8d8-0fda69326349" name="readCSV::subFlow"/>
+		<choice doc:name="Choice" doc:id="95370307-50a7-495b-bc58-89808fce7fcb" >
+			<when expression="#[isEmpty(payload[?($.contractId as Number == vars.contractId as Number default 0)])]">
+				<json-logger:logger doc:name="Logger" doc:id="980b01d4-5f12-4e3f-8cf4-1caabb8ed675" config-ref="JSON_Logger_Config" message="Sales to Order Error" tracePoint="EXCEPTION" priority="ERROR" category="API_ERROR_LOG">
+					<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: JSONLoggerModule::stringifyNonJSON(payload),
+    errordescription: "Invoices from Contract " ++ vars.contractId as String default "" ++ " Not Found"
+}]]]></json-logger:content>
+				</json-logger:logger>
+				<raise-error doc:name="CUSTOM:ID_NOT_FOUND" doc:id="b8e51a92-c6a4-4cbe-b38e-4545678d731e" type="CUSTOM:ID_NOT_FOUND" description='#["Invoices from Contract " ++ vars.contractId as String default "" ++ " Not Found"]'/>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="payload" doc:id="bd739e30-fd9d-4779-9877-fe69df52bdc7">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+import modules::NumberUtils
+import modules::DateUtils
+output application/json
+---
+{
+	invoices: payload[?($.contractId as Number == vars.contractId as Number)] map (invoice) -> {
+		invoiceId: invoice.invoiceId as Number default "",
+		customerId: invoice.customerId as Number default "",
+		contractId: invoice.contractId as Number default "",
+		invoiceNumber: invoice.invoiceNumber default "",
+		invoiceAmout: NumberUtils::CurrencyFormat(invoice.invoiceAmout as Number, invoice.currencyCode) default "",
+		currencyCode: invoice.currencyCode default "",
+		invoiceDueDate: DateUtils::formatDate(invoice.invoiceDueDate, invoice.currencyCode) default ""
+	},
+	totalRecords: sizeOf(payload[?($.contractId as Number == vars.contractId as Number)])
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+	
+</mule>

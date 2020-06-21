@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:dynamodb="http://www.mulesoft.org/schema/mule/dynamodb"
+	xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd
+http://www.mulesoft.org/schema/mule/dynamodb http://www.mulesoft.org/schema/mule/dynamodb/current/mule-dynamodb.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+	
+	<global-property doc:name="Global Property" doc:id="1ee48171-413a-4865-b6ac-4a636f457c08" name="mule.env" value="dev" />
+	<configuration-properties doc:name="Configuration properties" doc:id="55660abc-46dd-471f-88c2-61bb6d98c1d3" file="config/config-${mule.env}.yaml" />
+	
+	<file:config name="File_Config" doc:name="File Config" doc:id="f1b9790e-3ab9-4669-8706-d25956a960a8" />
+	
+	<json-logger:config name="JSON_Logger_Config" doc:name="JSON Logger Config" doc:id="7e9cb69c-3e8e-494d-a4b3-84ecf3f28748" environment="${mule.env}" />
+	<json-logger:config name="JSON_Logger_Config_MainProcess" doc:name="JSON Logger Config" doc:id="9caf2b74-78bb-489b-b9b8-473797f8c96e" environment="${mule.env}" disabledFields="content" />
+	<s3:config name="Amazon_S3_Configuration" doc:name="Amazon S3 Configuration" doc:id="3236297d-6953-43fd-9ee7-8a82256e0ca2" >
+		<s3:basic-connection accessKey="${aws.brunosouzas.accessKey}" secretKey="${aws.brunosouzas.secretKey}" />
+	</s3:config>
+	<api-gateway:autodiscovery apiId="${api.id}" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="37a41da8-a02e-464b-83e3-71b1d26825ba" flowRef="invoice-system-main" />
+
+</mule>

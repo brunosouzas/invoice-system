@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+    <http:listener-config name="invoice-system-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="invoice-system-config" api="resource::325e3d86-1f00-493a-97c7-071bc687c5d6:invoice-system:1.0.4:raml:zip:invoice-system.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <flow name="invoice-system-main">
+        <http:listener config-ref="invoice-system-httpListenerConfig" path="/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[(vars.outboundHeaders default {}) ++ {"x-correlation-id": correlationId}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[(vars.outboundHeaders default {}) ++ {"x-correlation-id": correlationId}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="invoice-system-config" doc:id="8d71c630-eed8-42e7-8d10-7baaad7e10ae" />
+        <error-handler>
+            <on-error-propagate enableNotifications="true" logException="true" doc:id="d9372d80-3fb7-42f2-b71a-c826daca3291" type="APIKIT:BAD_REQUEST">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="4ab1b242-d48b-4e54-a7cf-53dc5c2158ef">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+errors:[
+	{
+		message: 
+		if (isEmpty(error.muleMessage.typedValue.message) and isEmpty(error.description)) 
+			"The server cannot or will not process the request due to something that is perceived to be a client error (e.g., malformed request syntax, invalid request message framing, or deceptive request routing)." 
+		else if(isEmpty(error.muleMessage.typedValue.message))
+			error.description
+		else
+			error.muleMessage.typedValue.message,
+		code: "400"
+	}
+]]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="HTTP:FORBIDDEN, HTTP:SECURITY">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+errors:[
+	{
+		message: "The client does not have access rights to the content.", 
+		code: "403"
+	}
+]]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[403]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate enableNotifications="true" logException="true" type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+errors:[
+	{
+		message: "The origin server did not find a current representation for the target resource or is not willing to disclose that one exists.",
+		code: "404"
+	}
+]]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[404]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate enableNotifications="true" logException="true" type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+errros:[
+	{
+		message: "The method received in the request-line is known by the origin server but not supported by the target resource.", 
+		code: "405"
+	}
+]]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[405]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate enableNotifications="true" logException="true" type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+errors:[
+	{
+		message: "The server doesn't find any content that conforms to the criteria given by the user agent.", 
+		code: "406"
+	}
+]]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[406]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate enableNotifications="true" logException="true" type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+errors:[
+	{
+		message: "The origin server is refusing to service the request because the payload is in a format not supported by this method on the target resource.", 
+		code: "415"
+	}
+]]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[415]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="e07ec58a-c112-4a16-96b6-da4740f9040e" type="HTTP:TOO_MANY_REQUESTS">
+                <ee:transform doc:name="Transform Message" doc:id="bbf36014-4388-4cad-909f-73cd33ca7ba5">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+errors:[
+	{
+		message: "The user has sent too many requests in a given amount of time ('rate limiting')", 
+		code: "429"
+	}
+]]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[429]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate enableNotifications="true" logException="true" type="HTTP:INTERNAL_SERVER_ERROR, CUSTOM:INTERNAL_SERVER_ERROR">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+errors:[
+	{
+		message: "The server has encountered a situation it doesn't know how to handle.", 
+		code: "500"
+	}
+]]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[500]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate enableNotifications="true" logException="true" type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+errors:[
+	{
+		message: "The server does not support the functionality required to fulfill the request.", 
+		code: "501"
+	}
+]]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[501]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate enableNotifications="true" logException="true" type="HTTP:BAD_GATEWAY">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+errors:[
+	{
+		message: "The server, while acting as a gateway or proxy, received an invalid response from an inbound server it accessed while attempting to fulfill the request.", 
+		code: "502"
+	}
+]]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[502]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="HTTP:SERVICE_UNAVAILABLE, HTTP:CONNECTIVITY, HTTP:PARSING" enableNotifications="true" logException="true">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+errors:[
+	{
+		message: "The server is currently unable to handle the request due to a temporary overload or scheduled maintenance, which will likely be alleviated after some delay.", 
+		code: "503"
+	}
+]]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[501]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate enableNotifications="true" logException="true" type="HTTP:GATEWAY_TIMEOUT, HTTP:TIMEOUT">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+errors:[
+	{
+		message: "O sistema não conseguiu responder a sua consulta. Por favor, tente novamente.", 
+		code: "504"
+	}
+]]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[504]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="58a8dd85-1cca-45dc-8fd5-4618011d1de4" type="CUSTOM:ID_NOT_FOUND">
+                <ee:transform doc:name="Transform Message" doc:id="8534e5c1-92e1-4a92-9bf9-e491c1720e5e">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+errors:[
+	{
+		message: error.description, 
+		code: "404"
+	}
+]]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[404]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-continue>
+        </error-handler>
+    </flow>
+    <flow name="invoice-system-console">
+        <http:listener config-ref="invoice-system-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="invoice-system-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\contracts\(contractId)\invoices:invoice-system-config">
+        <json-logger:logger doc:name="Logger" doc:id="1562275b-8188-44b2-a4ce-d458acba9c64" config-ref="JSON_Logger_Config_MainProcess" message="#[&quot;Start Process - &quot; ++ attributes.maskedRequestPath]" category="API_LOG" />
+        <ee:transform doc:name="variables">
+            <ee:variables>
+                <ee:set-variable variableName="contractId">attributes.uriParams.'contractId'</ee:set-variable>
+                <ee:set-variable variableName="maskedRequestPath"><![CDATA[attributes.maskedRequestPath default ""]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="invoicesByContarctID" doc:id="bc57f13d-0230-4cf4-9ede-93cc54091d9a" name="invoicesByContarctID::Flow" />
+        <json-logger:logger doc:name="Logger" doc:id="79de8dc4-7cc5-413a-8728-cb3901260edd" config-ref="JSON_Logger_Config_MainProcess" message="#[&quot;End Process - &quot; ++ vars.maskedRequestPath]" tracePoint="END" category="API_LOG" />
+    </flow>
+    <flow name="get:\customer\(customerId)\invoices:invoice-system-config">
+        <json-logger:logger doc:name="Logger" doc:id="8c3a4e0b-72a4-450b-bc7b-9b1f2585a700" config-ref="JSON_Logger_Config_MainProcess" message="#[&quot;Start Process - &quot; ++ attributes.maskedRequestPath]" category="API_LOG" />
+        <ee:transform doc:name="variables">
+            <ee:variables>
+                <ee:set-variable variableName="customerId">attributes.uriParams.'customerId'</ee:set-variable>
+                <ee:set-variable variableName="maskedRequestPath"><![CDATA[attributes.maskedRequestPath default ""]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="invoicesByCustomerId" doc:id="3a82fa75-0711-4f96-ad8b-44533a0620c2" name="invoicesByCustomerId::Flow" />
+        <json-logger:logger doc:name="Logger" doc:id="797eeaf8-639b-4f71-98b6-85b47da27762" config-ref="JSON_Logger_Config_MainProcess" message="#[&quot;End Process - &quot; ++ vars.maskedRequestPath]" tracePoint="END" category="API_LOG" />
+    </flow>
+    <flow name="get:\invoices:invoice-system-config">
+        <json-logger:logger doc:name="Logger" doc:id="b11df2f4-9db2-403d-96c9-7e9e1be1770e" config-ref="JSON_Logger_Config_MainProcess" message="#[&quot;Start Process - &quot; ++ attributes.maskedRequestPath]" category="API_LOG" />
+        <ee:transform xsi:schemaLocation=" http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="bf658b51-d1b0-4373-a886-e899edbad051" doc:name="variables">
+            <ee:message />
+            <ee:variables>
+                <ee:set-variable variableName="customerId"><![CDATA[attributes.queryParams.customerId]]></ee:set-variable>
+                <ee:set-variable variableName="contractId"><![CDATA[attributes.queryParams.contractId]]></ee:set-variable>
+                <ee:set-variable variableName="invoiceNumber"><![CDATA[attributes.queryParams.invoiceNumber]]></ee:set-variable>
+                <ee:set-variable variableName="invoiceDateInit"><![CDATA[attributes.queryParams.invoiceDateInit]]></ee:set-variable>
+                <ee:set-variable variableName="invoiceDateEnd"><![CDATA[attributes.queryParams.invoiceDateEnd]]></ee:set-variable>
+                <ee:set-variable variableName="limit"><![CDATA[attributes.queryParams.limit]]></ee:set-variable>
+                <ee:set-variable variableName="offset"><![CDATA[attributes.queryParams.offset]]></ee:set-variable>
+                <ee:set-variable variableName="maskedRequestPath"><![CDATA[attributes.maskedRequestPath default ""]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="invoices" doc:id="d9f8dd01-f043-4653-9ec1-fea91330fe18" name="invoices::Flow" />
+        <json-logger:logger doc:name="Logger" doc:id="8871594a-8f71-4241-8292-540951420e6d" config-ref="JSON_Logger_Config_MainProcess" message="#[&quot;End Process - &quot; ++ vars.maskedRequestPath]" tracePoint="END" category="API_LOG" />
+    </flow>
+    <flow name="get:\invoices\(invoiceId):invoice-system-config">
+        <json-logger:logger doc:name="Logger" doc:id="58b08513-73c9-4b6d-aa0f-d8315f5cb0ec" config-ref="JSON_Logger_Config_MainProcess" message="#[&quot;Start Process - &quot; ++ attributes.maskedRequestPath]" category="API_LOG" />
+        <ee:transform doc:name="variables">
+            <ee:variables>
+                <ee:set-variable variableName="invoiceId"><![CDATA[attributes.uriParams.'invoiceId']]></ee:set-variable>
+                <ee:set-variable variableName="maskedRequestPath"><![CDATA[attributes.maskedRequestPath default ""]]></ee:set-variable>
+                <ee:set-variable variableName="contentType"><![CDATA[%dw 2.0
+import * from dw::core::Strings
+---
+substringBefore(attributes.headers.'content-type', "/") default ""]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <choice doc:name="Choice" doc:id="b86c3bfb-9e4f-47b0-ae62-5fdf7d100718">
+            <when expression="#[vars.contentType == &quot;text&quot;]">
+                <flow-ref doc:name="invoicesByInvoiceId_pdf" doc:id="f4832507-cdc5-45f4-862a-2a3ff28a1a65" name="invoicesByInvoiceId_pdf::Flow" />
+            </when>
+            <otherwise>
+                <flow-ref doc:name="invoicesByInvoiceId" doc:id="cc146b9e-205b-45b4-b693-a75cbcd243e0" name="invoicesByInvoiceId::Flow" />
+            </otherwise>
+        </choice>
+        <json-logger:logger doc:name="Logger" doc:id="1189f02c-2a7c-4c8a-9d63-3b4667f228b5" config-ref="JSON_Logger_Config_MainProcess" message="#[&quot;End Process - &quot; ++ vars.maskedRequestPath]" tracePoint="END" category="API_LOG" />
+    </flow>
+</mule>

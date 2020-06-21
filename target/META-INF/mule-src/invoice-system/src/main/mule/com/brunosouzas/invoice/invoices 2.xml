@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:dynamodb="http://www.mulesoft.org/schema/mule/dynamodb" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/dynamodb http://www.mulesoft.org/schema/mule/dynamodb/current/mule-dynamodb.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+	
+	<flow name="invoices::Flow" doc:id="6abbc2e1-ecbb-4df0-a2dd-7f5c2e18f0c7" >
+		<flow-ref doc:name="readCSV" doc:id="0e954937-a966-4168-b08d-37c8319dbfb2" name="readCSV::subFlow" />
+		<ee:transform doc:name="payload" doc:id="ed96e59d-9d4c-4cad-9797-f8cc89726d68" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import modules::NumberUtils
+import modules::DateUtils
+output application/json
+---
+{
+	invoices: payload map (invoice) -> {
+		invoiceId: invoice.invoiceId as Number default "",
+		customerId: invoice.customerId as Number default "",
+		contractId: invoice.contractId as Number default "",
+		invoiceNumber: invoice.invoiceNumber default "",
+		invoiceAmout: NumberUtils::CurrencyFormat(invoice.invoiceAmout as Number, invoice.currencyCode) default "",
+		currencyCode: invoice.currencyCode default "",
+		invoiceDueDate: DateUtils::formatDate(invoice.invoiceDueDate, invoice.currencyCode) default ""
+	},
+	totalRecords: sizeOf(payload)
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

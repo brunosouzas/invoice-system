@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	
+	<munit:config name="invoice-system-suite.xml" />
+	
+	<munit:test name="get:\contracts\(contractId)\invoices:invoice-system-success_test" doc:id="2508aa06-c9c9-4f8a-b011-0a684ad1e09e" >
+		<munit:behavior >
+			<munit:set-event doc:name="Set Input" doc:id="0e7101d0-0a9c-4dd7-83e9-1156d3585e08" >
+				<munit:attributes value="#[readUrl('classpath://getcontractscontractIdinvoicesinvoicesystemsuccesstest/set-event_attributes.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to get:\contracts\(contractId)\invoices:invoice-system-config" doc:id="a19d1c9c-c888-4ad5-b945-06f3d362b1dd" name="get:\contracts\(contractId)\invoices:invoice-system-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:verify-call doc:name="Verify invoicesByContarctID" doc:id="47766e4d-703a-4cb4-9fe8-dd245241ac09" processor="flow-ref" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="bc57f13d-0230-4cf4-9ede-93cc54091d9a" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+	
+	<munit:test name="get:\customer\(customerId)\invoices:invoice-system-success_test" doc:id="70faadd1-7a84-4ce1-9ca8-a7d0b8a15335" >
+		<munit:behavior >
+			<munit:set-event doc:name="Set Input" doc:id="ab779256-6c7e-4d01-a4c8-9483b6a8d54f" >
+				<munit:attributes value="#[readUrl('classpath://getcustomercustomerIdinvoicesinvoicesystemsuccesstest/set-event_attributes.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to get:\customer\(customerId)\invoices:invoice-system-config" doc:id="66e6ea59-cabd-400e-826a-10f0610ad98e" name="get:\customer\(customerId)\invoices:invoice-system-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:verify-call doc:name="Verify invoicesByCustomerId" doc:id="e8839a53-5193-4d88-8c59-9e9da741709e" processor="flow-ref" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="3a82fa75-0711-4f96-ad8b-44533a0620c2" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+	
+	<munit:test name="get:\invoices:invoice-system-success_test" doc:id="ce367762-e850-41d7-a2e1-0ea71011b5ee" >
+		<munit:behavior>
+			<munit:set-event doc:name="Set Input" doc:id="a807cbe7-1e0a-4a22-afb5-c567bf350a19">
+				<munit:attributes value="#[readUrl('classpath://getinvoicesinvoicesystemsuccesstest/set-event_attributes.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to get:\invoices:invoice-system-config" doc:id="83b5f975-5cec-4eb3-8581-d2c52c7a070e" name="get:\invoices:invoice-system-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:verify-call doc:name="Verify invoices" doc:id="a6341621-1a3e-4e07-956e-8a5c360c729c" processor="flow-ref" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="d9f8dd01-f043-4653-9ec1-fea91330fe18" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+
+	<munit:test name="invoice-system-test-suite-get:\invoices\(invoiceId):invoice-system-config_json_Test" doc:id="f89cd585-22ef-442a-95a3-668ebc69a488" description="Test">
+		<munit:behavior >
+			<munit:set-event doc:name="Set Input" doc:id="d7d77332-f36b-4eff-99bd-aefb50b377cf" >
+				<munit:attributes value="#[readUrl('classpath://invoiceByinvoiceId/set-event_attributes.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to get:\invoices\(invoiceId):invoice-system-config" doc:id="1c1eac97-e38e-4b44-b85c-278bdfed70cb" name="get:\invoices\(invoiceId):invoice-system-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:verify-call doc:name="Verify call" doc:id="99736c1d-ef61-4667-8b8c-553fafab0bba" processor="flow-ref" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="cc146b9e-205b-45b4-b693-a75cbcd243e0" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+
+	<munit:test name="invoice-system-test-suite-get:\invoices\(invoiceId):invoice-system-config_pdf_Test" doc:id="8712ad17-c673-4fda-b546-0b98d84d2901" description="Test">
+		<munit:behavior >
+			<munit:set-event doc:name="Set Input" doc:id="c3c45228-0e41-45ba-a4cf-772d807fd116" >
+				<munit:attributes value="#[readUrl('classpath://invoiceByinvoiceId/set-event_attributes_pdf.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to get:\invoices\(invoiceId):invoice-system-config" doc:id="a9f4170f-57b1-4adc-bddd-2aa6b698bc8f" name="get:\invoices\(invoiceId):invoice-system-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:verify-call doc:name="Verify call" doc:id="2f7eeba9-8526-46b8-9d5c-969c6e435408" processor="flow-ref" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="f4832507-cdc5-45f4-862a-2a3ff28a1a65" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+
+</mule>

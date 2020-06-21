@@ -1,0 +1,92 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="invoicesCsv" format="csv">
+      <types:shape format="weave" example="data/invoices.csv"><![CDATA[%dw 2.0
+
+type invoicesCsv = Array<{|  "﻿invoiceId": String,   customerId: String,   contractId: String,   invoiceNumber: String,   invoiceAmout: String,   currencyCode: String,   invoiceDueDate: String|}> {"isQuotedString": "false",
+"header": "true",
+"headerLineNumber": "0",
+"separator": ","}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+        <types:property name="separator" value=","/>
+      </types:properties>
+    </types:type>
+    <types:type name="invoices" format="json">
+      <types:shape format="weave" example="examples/invoices.json"><![CDATA[%dw 2.0
+
+type invoices = {|
+  invoices: Array<{|    invoiceId: Number {"typeId": "int"},     customerId: Number {"typeId": "int"},     contractId: Number {"typeId": "int"},     invoiceNumber: String,     invoiceAmout: Number {"typeId": "double"},     currencyCode: String,     invoiceDueDate: String  |}>, 
+  totalRecords: Number {"typeId": "int"}
+|} {"example": "{\\\"invoices\\\":[{\\\"invoiceId\\\":2,\\\"customerId\\\":10400043,\\\"contractId\\\":40008557,\\\"invoiceNumber\\\":\\\"43190692660604001316550500001139691767689488\\\",\\\"invoiceAmout\\\":149.99,\\\"currencyCode\\\":\\\"EUR\\\",\\\"invoiceDueDate\\\":\\\"2020-07-01\\\"},{\\\"invoiceId\\\":3,\\\"customerId\\\":10071796,\\\"contractId\\\":181805,\\\"invoiceNumber\\\":\\\"43190699860604001316550500001239691767689400\\\",\\\"invoiceAmout\\\":349.99,\\\"currencyCode\\\":\\\"GBP\\\",\\\"invoiceDueDate\\\":\\\"2020-07-01\\\"}],\\\"totalRecords\\\":1}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="invoices_csv-json" format="json">
+      <types:shape format="weave" example="examples/invoices_csv_json.json"><![CDATA[%dw 2.0
+
+type invoices_csv_json = Array<{|  invoiceId: String,   customerId: String,   contractId: String,   invoiceNumber: String,   invoiceAmout: String,   currencyCode: String,   invoiceDueDate: String|}> {"example": "[{\\\"invoiceId\\\":\\\"2\\\",\\\"customerId\\\":\\\"10400043\\\",\\\"contractId\\\":\\\"40008557\\\",\\\"invoiceNumber\\\":\\\"43190692660604001316550500001139691767689488\\\",\\\"invoiceAmout\\\":\\\"149.99\\\",\\\"currencyCode\\\":\\\"EUR\\\",\\\"invoiceDueDate\\\":\\\"2020-07-01\\\"}]"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="invoice" format="json">
+      <types:shape format="weave" example="examples/invoice.json"><![CDATA[%dw 2.0
+
+type invoice = {|
+  invoice: {|
+    invoiceId: Number {"typeId": "int"}, 
+    customerId: Number {"typeId": "int"}, 
+    contractId: Number {"typeId": "int"}, 
+    invoiceNumber: String, 
+    invoiceAmout: Number {"typeId": "double"}, 
+    currencyCode: String, 
+    invoiceDueDate: String
+  |}
+|} {"example": "{\\\"invoice\\\":{\\\"invoiceId\\\":1,\\\"customerId\\\":10400043,\\\"contractId\\\":40008557,\\\"invoiceNumber\\\":\\\"43190692660604001316550500001139691767689488\\\",\\\"invoiceAmout\\\":149.99,\\\"currencyCode\\\":\\\"BRL\\\",\\\"invoiceDueDate\\\":\\\"2020-07-01\\\"}}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#19569ade-5a1a-4a39-9833-201c005ea2c4">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="invoices_csv-json"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#ed96e59d-9d4c-4cad-9797-f8cc89726d68">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="invoices"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#25915908-be7a-46a1-bd2d-e86819e5de16">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="invoicesCsv"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#49fe0e19-8429-4c10-88de-a779a26081f7"/>
+  <types:enrichment select="#065619e2-b3df-45c2-900e-958585694909">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="invoice"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

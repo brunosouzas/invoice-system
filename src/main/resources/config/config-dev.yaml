@@ -1,0 +1,23 @@
+mule:
+  env: "dev"
+  
+api:
+  id: "16216197"
+   
+### JSON Logger configuration ###
+# Indicate which fields should not be logged
+json:
+  logger:
+    disabledFields: ""
+    # [DO NOT EDIT] To be replaced by Maven build
+    application:
+      name: ${project.artifactId}
+      version: ${project.version} 
+      
+aws:
+  brunosouzas:
+    accessKey: "AKIAVROIJH6E5TUCFZ5A"
+    secretKey: "nkNHcugerCi71LTgupEFZu42z2vxeV34HYnyKYiY"
+    
+file:
+  invoiceCsvPath: "/data/invoices.csv"

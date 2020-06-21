@@ -1,0 +1,44 @@
+{
+  "configs": [
+    "global.xml",
+    "com/brunosouzas/invoice/invoicesByInvoiceId.xml",
+    "com/brunosouzas/invoice/invoices.xml",
+    "invoice-system.xml",
+    "com/brunosouzas/invoice/invoicesByCustomerId.xml",
+    "com/brunosouzas/invoice/invoicesByContractID.xml",
+    "com/brunosouzas/utils/fileUtils.xml"
+  ],
+  "secureProperties": [],
+  "redeploymentEnabled": true,
+  "name": "com.brunosouzas.api:invoice-system:1.0.0-SNAPSHOT",
+  "minMuleVersion": "4.3.0",
+  "requiredProduct": "MULE_EE",
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedPackages": [],
+      "exportedResources": [
+        "log4j2.xml",
+        "global.xml",
+        "config/config-dev.yaml",
+        "application-types.xml",
+        "examples/invoices.json",
+        "examples/invoice.json",
+        "examples/invoices_csv_json.json",
+        "invoice-system.xml",
+        "modules/NumberUtils.dwl",
+        "modules/DateUtils.dwl",
+        "data/invoices.csv",
+        "com/brunosouzas/utils/fileUtils.xml",
+        "com/brunosouzas/invoice/invoicesByInvoiceId.xml",
+        "com/brunosouzas/invoice/invoicesByCustomerId.xml",
+        "com/brunosouzas/invoice/invoicesByContractID.xml",
+        "com/brunosouzas/invoice/invoices.xml"
+      ]
+    }
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {}
+  }
+}

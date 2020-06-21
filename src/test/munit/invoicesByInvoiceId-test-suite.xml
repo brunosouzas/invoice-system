@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="invoicesByInvoiceId-test-suite.xml" />
+
+	<munit:test name="invoicesById-test" doc:id="ef153b99-e0a8-4fb0-b0db-4e33e0b29786" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock readCSV" doc:id="dd0bd6dd-8543-4fb4-ad6a-1f400fcb8005" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="1316d58f-c2b9-4c9f-95e5-8bfd6abeefa5" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/json --- readUrl('classpath://invoicesByCustomerIdsuccesstest/mock_payload.dwl')]" mediaType="application/json" encoding="UTF-8" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:spy doc:name="Spy payload" doc:id="1cccb2e5-abfb-481e-a80b-dad79e3fe704" processor="ee:transform">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="065619e2-b3df-45c2-900e-958585694909" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:before-call >
+					<munit-tools:assert doc:name="Assert payload" doc:id="c682bc5f-d8d7-49db-84cc-4db571b34d45" message="The payload does not match">
+						<munit-tools:that ><![CDATA[#[%dw 2.0
+import invoicesByIdImpl::spy_assert_payload
+---
+spy_assert_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+					</munit-tools:assert>
+				</munit-tools:before-call>
+				<munit-tools:after-call >
+					<munit-tools:assert doc:name="Assert payload" doc:id="751cc22b-f9e3-4e98-8706-bff76be15ea1" message="The payload does not match">
+						<munit-tools:that ><![CDATA[#[%dw 2.0
+import invoicesByIdImpl::spy_assert_payload1
+---
+spy_assert_payload1::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+					</munit-tools:assert>
+				</munit-tools:after-call>
+			</munit-tools:spy>
+			<munit:set-event doc:name="Set Input" doc:id="b7fbfc21-8227-4155-a40f-b50ca488455d" >
+				<munit:attributes value="#[readUrl('classpath://invoicesByIdImpl/set-event_attributes.dwl')]" />
+				<munit:variables >
+					<munit:variable key="invoiceId" value="4" />
+				</munit:variables>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to invoicesByInvoiceId::Flow" doc:id="7c1b47fb-c690-4cbf-85df-449cba44bce3" name="invoicesByInvoiceId::Flow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="a156b537-842e-4b61-b9c3-e4c5e3ac8c39" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import invoicesByIdImpl::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+			<munit-tools:verify-call doc:name="Verify payload" doc:id="4c32cb8e-350f-48ea-a629-c2b464c72cc7" processor="ee:transform" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="065619e2-b3df-45c2-900e-958585694909" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+
+</mule>
